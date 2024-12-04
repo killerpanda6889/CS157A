@@ -12,7 +12,7 @@
     <h2>Run SQL Queries</h2>
     <form method="POST">
         <label for="sql_query">Enter a SELECT query:</label><br>
-        <textarea id="sql_query" name="sql_query" rows="4" cols="50" required>{{ sql_query }}</textarea><br>
+        <textarea id="sql_query" name="sql_query" rows="4" cols="50" required></textarea><br>
         <button type="submit">Execute</button>
     </form>
 
@@ -25,29 +25,5 @@
             </ul>
         {% endif %}
     {% endwith %}
-
-    <h2>Query Results:</h2>
-    {% if results %}
-        <table border="1">
-            <thead>
-                <tr>
-                    {% for column in results[0].keys() %}
-                        <th>{{ column }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in results %}
-                    <tr>
-                        {% for value in row.values() %}
-                            <td>{{ value }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No results to display.</p>
-    {% endif %}
 </body>
 </html>

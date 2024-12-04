@@ -27,50 +27,77 @@ def index():
 
             if connection.is_connected():
                 connection.close()
-                return redirect(url_for('success', db=database, host=host, port=port, username=username, password=password))
+                return redirect(url_for(
+                    'execute',
+                    db=database,
+                    host=host,
+                    port=port,
+                    username=username,
+                    password=password
+                ))
         except Error as e:
             flash(f"Connection failed: {str(e)}", 'error')
 
     return render_template('index.html')
 
-@app.route('/success', methods=['GET', 'POST'])
-def success():
-    # Retrieve the database connection details from query parameters
+@app.route('/execute', methods=['GET', 'POST'])
+def execute():
     db_name = request.args.get('db', 'No DB Selected')
     host = request.args.get('host')
     port = request.args.get('port')
     username = request.args.get('username')
     password = request.args.get('password')
 
-    results = None
-    sql_query = None
-
     if request.method == 'POST':
-        # Get the SQL query from the form
         sql_query = request.form.get('sql_query')
-
-        # Only allow SELECT statements
         if sql_query.strip().lower().startswith('select'):
-            try:
-                # Connect to the database and execute the query
-                connection = mysql.connector.connect(
-                    host=host,
-                    port=int(port),
-                    user=username,
-                    password=password,
-                    database=db_name
-                )
-                cursor = connection.cursor(dictionary=True)
-                cursor.execute(sql_query)
-                results = cursor.fetchall()
-                cursor.close()
-                connection.close()
-            except Error as e:
-                flash(f"Error executing query: {str(e)}", 'error')
+            # Pass query parameters to results route
+            return redirect(url_for(
+                'results', 
+                db=db_name, 
+                host=host, 
+                port=port, 
+                username=username, 
+                password=password, 
+                query=sql_query
+            ))
         else:
             flash('Only SELECT statements are allowed.', 'warning')
 
-    return render_template('success.html', db_name=db_name, results=results, sql_query=sql_query)
+    return render_template('execute.html', db_name=db_name)
+
+@app.route('/results')
+def results():
+    db_name = request.args.get('db')
+    host = request.args.get('host')
+    port = request.args.get('port')
+    username = request.args.get('username')
+    password = request.args.get('password')
+    query = request.args.get('query')
+
+    results = []
+    columns = []
+    try:
+        # Connect to the database and execute the query
+        connection = mysql.connector.connect(
+            host=host,
+            port=int(port),
+            user=username,
+            password=password,
+            database=db_name
+        )
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query)
+        results = cursor.fetchall()
+        if results:
+            columns = results[0].keys()
+        cursor.close()
+        connection.close()
+    except Error as e:
+        flash(f"Error executing query: {str(e)}", 'error')
+        return redirect(url_for('execute', db=db_name, host=host, port=port, username=username, password=password))
+
+    return render_template('results.html', db_name=db_name, query=query, results=results, columns=columns)
 
 if __name__ == '__main__':
     app.run(debug=True)
