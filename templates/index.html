@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+</head>
+<body>
+    <h1>Sign In with MySQL Credentials</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li style="color: {{ 'red' if category == 'error' else 'green' }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="POST">
+        <label for="host">Host:</label>
+        <input type="text" id="host" name="host" value= "cs157aproject.c1eumiik0lu4.us-west-1.rds.amazonaws.com" required><br>
+        <label for="port">Port:</label>
+        <input type="number" id="port" name="port" value="3306" required><br>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" value ="admin" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password"><br>
+        <label for="database">Database:</label>
+        <input type="text" id="database" name="database" value= "Inventory_Management_System" required><br>
+        <button type="submit">Sign In</button>
+    </form>
+</body>
+</html>

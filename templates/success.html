@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Successful</title>
+</head>
+<body>
+    <h1>Connection Successful</h1>
+    <p>Database in use: <strong>{{ db_name }}</strong></p>
+
+    <h2>Run SQL Queries</h2>
+    <form method="POST">
+        <label for="sql_query">Enter a SELECT query:</label><br>
+        <textarea id="sql_query" name="sql_query" rows="4" cols="50" required>{{ sql_query }}</textarea><br>
+        <button type="submit">Execute</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Query Results:</h2>
+    {% if results %}
+        <table border="1">
+            <thead>
+                <tr>
+                    {% for column in results[0].keys() %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                    <tr>
+                        {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No results to display.</p>
+    {% endif %}
+</body>
+</html>
