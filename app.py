@@ -50,7 +50,7 @@ def execute():
 
     if request.method == 'POST':
         sql_query = request.form.get('sql_query')
-        if sql_query.strip().lower().startswith('select'):
+        if sql_query.strip().lower().startswith('select') or sql_query.strip().lower().startswith('show') or sql_query.strip().lower().startswith('describe'):
             # Pass query parameters to results route
             return redirect(url_for(
                 'results', 
@@ -62,7 +62,7 @@ def execute():
                 query=sql_query
             ))
         else:
-            flash('Only SELECT statements are allowed.', 'warning')
+            flash('Only SELECT/Show/Describe statements are allowed.', 'warning')
 
     return render_template('execute.html', db_name=db_name)
 
