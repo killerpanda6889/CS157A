@@ -1,37 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Query Results</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Query Results</h1>
-    <p>Database in use: <strong>{{ db_name }}</strong></p>
-    <p>Executed Query: <code>{{ query }}</code></p>
+    <h1>Query Results for Database: {{ db_name }}</h1>
+    <h2>SQL Query: {{ query }}</h2>
 
     {% if results %}
         <table border="1">
             <thead>
                 <tr>
-                    {% for column in columns %}
-                        <th>{{ column }}</th>
+                    {% for col in columns %}
+                        <th>{{ col }}</th>
                     {% endfor %}
                 </tr>
             </thead>
             <tbody>
                 {% for row in results %}
                     <tr>
-                        {% for value in row.values() %}
-                            <td>{{ value }}</td>
+                        {% for col in columns %}
+                            <td>{{ row[col] }}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <h3>Visualization</h3>
+        <div id="chart"></div>
+        <script>
+            var chartData = {{ chart | safe }};
+            Plotly.newPlot('chart', chartData.data, chartData.layout);
+        </script>
     {% else %}
         <p>No results found.</p>
     {% endif %}
-    <a href="{{ url_for('execute', db=db_name) }}">Run another query</a>
+
+    <br>
+    <form method="GET" action="{{ url_for('execute') }}">
+        <input type="hidden" name="db" value="{{ db_name }}">
+        <input type="hidden" name="host" value="{{ request.args.get('host') }}">
+        <input type="hidden" name="port" value="{{ request.args.get('port') }}">
+        <input type="hidden" name="username" value="{{ request.args.get('username') }}">
+        <input type="hidden" name="password" value="{{ request.args.get('password') }}">
+        <button type="submit">Go Back</button>
+    </form>
 </body>
 </html>

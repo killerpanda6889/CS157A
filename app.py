@@ -1,6 +1,9 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 import mysql.connector
 from mysql.connector import Error
+import plotly.express as px
+import pandas as pd
+import json
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # For flash messages
@@ -8,7 +11,7 @@ app.secret_key = "your_secret_key"  # For flash messages
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Get user input from the form
+        # Get user input for MySQL credentials
         host = request.form.get('host')
         port = request.form.get('port')
         username = request.form.get('username')
@@ -16,7 +19,7 @@ def index():
         database = request.form.get('database')
 
         try:
-            # Attempt to connect to the MySQL database
+            # Try connecting to the MySQL database
             connection = mysql.connector.connect(
                 host=host,
                 port=int(port),
@@ -24,9 +27,9 @@ def index():
                 password=password,
                 database=database
             )
-
             if connection.is_connected():
                 connection.close()
+                # Redirect to the execute page on successful connection
                 return redirect(url_for(
                     'execute',
                     db=database,
@@ -50,19 +53,18 @@ def execute():
 
     if request.method == 'POST':
         sql_query = request.form.get('sql_query')
-        if sql_query.strip().lower().startswith('select') or sql_query.strip().lower().startswith('show') or sql_query.strip().lower().startswith('describe'):
-            # Pass query parameters to results route
+        if sql_query.strip().lower().startswith(('select', 'show', 'describe')):
             return redirect(url_for(
-                'results', 
-                db=db_name, 
-                host=host, 
-                port=port, 
-                username=username, 
-                password=password, 
+                'results',
+                db=db_name,
+                host=host,
+                port=port,
+                username=username,
+                password=password,
                 query=sql_query
             ))
         else:
-            flash('Only SELECT/Show/Describe statements are allowed.', 'warning')
+            flash('Only SELECT/SHOW/DESCRIBE statements are allowed.', 'warning')
 
     return render_template('execute.html', db_name=db_name)
 
@@ -77,6 +79,8 @@ def results():
 
     results = []
     columns = []
+    chart = None
+
     try:
         # Connect to the database and execute the query
         connection = mysql.connector.connect(
@@ -89,15 +93,20 @@ def results():
         cursor = connection.cursor(dictionary=True)
         cursor.execute(query)
         results = cursor.fetchall()
+
         if results:
-            columns = results[0].keys()
+            # Extract column names and visualize data
+            columns = list(results[0].keys())
+            df = pd.DataFrame(results)
+            chart = px.bar(df, x=columns[0], y=columns[1:], title="Query Results").to_json()
+        
         cursor.close()
         connection.close()
     except Error as e:
         flash(f"Error executing query: {str(e)}", 'error')
         return redirect(url_for('execute', db=db_name, host=host, port=port, username=username, password=password))
 
-    return render_template('results.html', db_name=db_name, query=query, results=results, columns=columns)
+    return render_template('results.html', db_name=db_name, query=query, results=results, columns=columns, chart=chart)
 
 if __name__ == '__main__':
     app.run(debug=True)
